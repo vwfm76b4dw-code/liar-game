@@ -514,8 +514,10 @@ async def api_start(req: Request):
     flash_llm = LLMClient(flash_cfg)
 
     all_chars = load_characters()
+    # 面试房间 10 人中除去被击杀的陈俊南，9 人参与游戏
     total = state.config.total_players
-    selected = random.sample(all_chars, min(total, len(all_chars)))
+    available = [c for c in all_chars if c.name != "陈俊南"]
+    selected = random.sample(available, min(total, len(available)))
     random.shuffle(selected)
 
     state.players = []
