@@ -80,6 +80,7 @@ body {
 
 /* ── Body ── */
 #body-row { display: flex; flex: 1; min-height: 0; }
+.game-layout { display: none; flex-direction: column; flex: 1; min-height: 0; }
 
 /* ── Sidebar ── */
 #sidebar {
@@ -108,6 +109,15 @@ body {
 .char-item .dot.auto { background: #509050; }
 .char-item .dot.manual { background: #d0c040; }
 .char-item .dot.obs { background: #806050; }
+.char-tag {
+  font-family: 'TimeFont', monospace;
+  padding: 2px 8px; font-size: 11px;
+  background: rgba(30,15,10,0.4); border: 1px solid #2a1a0a;
+  color: #b09880; cursor: pointer; border-radius: 3px;
+}
+.char-tag.liar { border-color: #5a1a1a; color: #cc7766; }
+.char-tag.awakened { border-color: #8a8a00; color: #cccc50; }
+.char-tag.manual { border-color: #d0d040; color: #e0d060; background: rgba(60,50,10,0.3); }
 
 /* ── Chat ── */
 #chat-col { flex: 1; display: flex; flex-direction: column; min-width: 0; }
@@ -325,22 +335,24 @@ body {
   </div>
 
   <!-- Body -->
-  <div id="body-row">
-    <!-- Sidebar -->
-    <div id="sidebar">
-      <div class="sec-title">✦ 视角</div>
-      <div class="char-item active" id="persp-host" onclick="setPerspective('host')">
-        <svg class="av" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#2a1a10" stroke="#706050" stroke-width="1"/><text x="12" y="16" text-anchor="middle" font-size="12" fill="#a09070">🐑</text></svg>
-        <span class="nm">人羊</span>
-        <span class="dot obs"></span>
+  <div class="game-layout" id="game-layout">
+    <div id="body-row">
+      <!-- Sidebar -->
+      <div id="sidebar">
+        <div class="sec-title">✦ 视角</div>
+        <div class="char-item active" id="persp-host" onclick="setPerspective('host')">
+          <svg class="av" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#2a1a10" stroke="#706050" stroke-width="1"/><text x="12" y="16" text-anchor="middle" font-size="12" fill="#a09070">🐑</text></svg>
+          <span class="nm">人羊</span>
+          <span class="dot obs"></span>
+        </div>
+        <div class="sec-title">✦ 参与者</div>
+        <div id="char-list"></div>
       </div>
-      <div class="sec-title">✦ 参与者</div>
-      <div id="char-list"></div>
-    </div>
 
-    <!-- Chat column -->
-    <div id="chat-col">
-      <div id="chat-area">
+      <!-- Chat column -->
+      <div id="chat-col">
+        <div id="char-grid" style="display:flex;flex-wrap:wrap;gap:3px;padding:4px 8px;border-bottom:1px solid var(--border);"></div>
+        <div id="chat-area">
         <div class="msg-row system">
           <div class="msg-bubble">终焉之地 · 说谎者游戏</div>
         </div>
@@ -590,6 +602,20 @@ async function startGame() {
   document.getElementById('user-input').disabled = true;
   document.getElementById('user-input').placeholder = '观察者无需发言';
   document.getElementById('input-prompt').innerHTML = '👑 观察者模式 — 旁观游戏进程';
+  // 填充角色标签
+  const grid = document.getElementById('char-grid');
+  if (grid && data.participants) {
+    grid.innerHTML = '';
+    data.participants.forEach(p => {
+      const tag = document.createElement('span');
+      tag.className = 'char-tag liar';
+      const echoText = p.echo ? ' <span class="echo">[' + p.echo + ']</span>' : '';
+      tag.innerHTML = p.name + echoText;
+      tag.id = 'ctag-' + p.name;
+      tag.addEventListener('click', () => toggleManual(p.name));
+      grid.appendChild(tag);
+    });
+  }
   syncDialog(data.dialog || []);
   updateActions(data.actions || []);
   if (!polling) { polling = true; pollState(); }
