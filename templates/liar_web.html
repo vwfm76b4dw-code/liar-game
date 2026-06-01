@@ -253,27 +253,45 @@ body {
 .aa-btn.cancel { background: transparent; border: 1px solid #3a2a2a; color: var(--text3); }
 .aa-btn.cancel:hover { background: rgba(255,255,255,0.03); }
 
-/* ── Setup ── */
+/* ── Setup overlay ── */
 #setup-panel {
-  position: absolute; top: 50%; left: 50%;
-  transform: translate(-50%,-50%);
-  text-align: center; padding: 50px 60px; z-index: 100;
-  background: #0d0a06; border: 3px solid var(--border);
-  box-shadow: 0 0 60px rgba(0,0,0,0.8);
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at center, #0d0a06 0%, #060403 100%);
+  transition: opacity 0.6s, transform 0.6s;
 }
-#setup-panel h2 {
-  font-family: 'TitleFont', serif; font-size: 32px; color: var(--accent);
-  letter-spacing: 10px;
+#setup-panel.hidden { opacity: 0; transform: scale(1.1); pointer-events: none; }
+.setup-box {
+  text-align: center; padding: 50px 60px;
+  background: rgba(13,10,6,0.9); border: 2px solid #2a1a0a;
+  box-shadow: 0 0 60px rgba(0,0,0,0.6);
+  position: relative; overflow: hidden;
 }
-#setup-panel .subtitle { font-size: 14px; color: var(--text3); margin-top: 8px; letter-spacing: 3px; }
-#setup-panel small { color: #504030; font-size: 11px; display: block; margin-top: 4px; }
-.btn-start {
-  font-family: 'TitleFont', serif; cursor: pointer; margin-top: 30px;
-  background: #3a1500; color: var(--accent); border: 2px solid #6a2a0a;
-  padding: 12px 48px; font-size: 18px; letter-spacing: 6px;
-  transition: 0.05s;
+.setup-box::before {
+  content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
+  background: conic-gradient(from 0deg, #3a2a1a, #1a0a00, #3a2a1a, #1a0a00, #3a2a1a);
+  z-index: -1; animation: spin 8s linear infinite;
 }
-.btn-start:hover { background: #4a1a00; border-color: #8a3a0a; color: #f0a040; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.setup-box h2 {
+  font-family: 'TitleFont', serif; font-size: 34px; color: var(--accent);
+  letter-spacing: 10px; text-shadow: 2px 2px 0 #0a0500;
+}
+.setup-box .subtitle { font-size: 14px; color: var(--text3); margin-top: 6px; letter-spacing: 4px; }
+.setup-box small { color: #504030; font-size: 11px; display: block; margin-top: 2px; }
+.setup-btn {
+  font-family: 'TimeFont', monospace; cursor: pointer; display: block; width: 100%;
+  padding: 10px 0; font-size: 14px; letter-spacing: 3px; transition: 0.1s;
+  border: 1px solid #2a1a0a; background: rgba(20,12,6,0.8); color: var(--text2);
+  margin-top: 8px;
+}
+.setup-btn:hover { border-color: var(--accent2); color: var(--accent); background: rgba(30,20,10,0.8); }
+.setup-btn.primary {
+  background: #3a1500; border-color: #6a2a0a; color: var(--accent); font-size: 16px;
+  font-family: 'TitleFont', serif; letter-spacing: 6px; padding: 12px 0;
+}
+.setup-btn.primary:hover { background: #4a1a00; border-color: #8a3a0a; color: #f0a040; }
+.setup-divider { height: 1px; background: #1a1008; margin: 12px 0; }
 
 .toast {
   position: fixed; bottom: 70px; right: 20px; z-index: 200;
@@ -296,7 +314,8 @@ body {
       <button class="hdr-btn" id="btn-auto" onclick="toggleAuto()">▶ 自动</button>
       <button class="hdr-btn" id="btn-pause" onclick="togglePause()" style="display:none;">⏸</button>
       <button class="hdr-btn danger" id="btn-stop" onclick="stopAuto()" style="display:none;">⏹</button>
-      <button class="hdr-btn" onclick="exportDialog()" title="导出对话记录">💾</button>
+      <button class="hdr-btn" onclick="saveExperiment()" title="保存实验">💾</button>
+      <button class="hdr-btn" onclick="exportDialog()" title="导出对话文本">📄</button>
     </span>
   </div>
 
@@ -359,12 +378,16 @@ body {
 
 <!-- Setup overlay -->
 <div id="setup-panel">
-  <h2>说谎者</h2>
-  <div class="subtitle">终焉之地 · 九死一生</div>
-  <small>基于《十日终焉》</small>
-  <button class="btn-start" onclick="startGame()">进 入 游 戏</button>
-  <br><br>
-  <button id="btn-load-save" class="btn-start" style="font-size:14px;padding:8px 30px;margin-top:4px;background:#1a0a00;border-color:#3a2a1a;color:#b09050;" onclick="loadSave()">📂 恢复上次存档</button>
+  <div class="setup-box">
+    <h2>说谎者</h2>
+    <div class="subtitle">终焉之地 · 实验</div>
+    <div style="margin:20px 0;">
+      <button class="setup-btn primary" onclick="startGame()">🧪 新建实验</button>
+      <button class="setup-btn" id="btn-load-save" onclick="loadSave()">📂 加载实验</button>
+    </div>
+    <div class="setup-divider"></div>
+    <small style="color:#504030;font-size:10px;">基于《十日终焉》· 看AI何时通关</small>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -512,22 +535,44 @@ async function loadSave() {
   const resp = await fetch('/api/load_save', {method:'POST'});
   const data = await resp.json();
   if (data.loaded) {
+    document.getElementById('setup-panel').classList.add('hidden');
+    await new Promise(r => setTimeout(r, 600));
     document.getElementById('setup-panel').style.display = 'none';
+    document.getElementById('game-layout').style.display = 'flex';
     document.getElementById('input-bar').style.display = 'flex';
+    document.getElementById('auto-controls').style.display = 'flex';
+    document.getElementById('control-panel').style.display = 'flex';
     document.getElementById('user-input').disabled = true;
-    document.getElementById('user-input').placeholder = '存档已加载';
-    document.getElementById('input-prompt').innerHTML = '📂 存档已恢复 — 包含 ' + data.dialog.length + ' 条对话';
+    document.getElementById('user-input').placeholder = '实验已加载';
+    document.getElementById('input-prompt').innerHTML = '📂 实验已恢复 — 包含 ' + data.dialog.length + ' 条对话';
     syncDialog(data.dialog || []);
     updateActions(data.actions || []);
     if (!polling) { polling = true; pollState(); }
-    showToast('存档加载成功');
+    showToast('实验加载成功');
   } else {
-    showToast('没有找到存档');
+    showToast('没有找到实验存档');
   }
+}
+
+function saveExperiment() {
+  // 手动触发后端保存
+  fetch('/api/action', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({action: 'save_experiment'}),
+  }).then(r=>r.json()).then(d => {
+    showToast(d.status || '实验已保存');
+  });
 }
 
 // ── Start game ──
 async function startGame() {
+  document.getElementById('setup-panel').classList.add('hidden');
+  await new Promise(r => setTimeout(r, 600)); // 等待动画
+  document.getElementById('setup-panel').style.display = 'none';
+  document.getElementById('game-layout').style.display = 'flex';
+  document.getElementById('input-bar').style.display = 'flex';
+  document.getElementById('auto-controls').style.display = 'flex';
+  document.getElementById('control-panel').style.display = 'flex';
   const resp = await fetch('/api/start', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({rounds: 2}),

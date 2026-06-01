@@ -685,6 +685,10 @@ async def api_action(req: Request):
             state.log(f"🐑 {state.config.host_name} (你)", content, "host")
         return {"dialog": state.dialog_log[-3:], "status": state.phase, "actions": []}
 
+    elif action == "save_experiment":
+        state.save_state()
+        return {"status": "💾 实验已保存"}
+
     return {"status": "unknown", "actions": []}
 
 
