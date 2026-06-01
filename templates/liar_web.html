@@ -127,10 +127,10 @@ body {
 .msg-name { font-size: 11px; font-weight: 700; letter-spacing: 1px; }
 .msg-tm { font-size: 9px; color: var(--text3); }
 .msg-bubble {
-  display: inline-block; max-width: 92%; padding: 5px 10px;
-  font-size: 13px; line-height: 1.55; word-break: break-word;
-  white-space: pre-wrap; border-radius: 3px 6px 6px 6px;
-  border-left: 3px solid transparent;
+  display: inline-block; max-width: 92%; padding: 6px 12px;
+  font-size: 13px; line-height: 1.6; word-break: break-word;
+  white-space: pre-wrap; border-radius: 8px 8px 8px 4px;
+  border-left: 3px solid transparent; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 
 .msg-row.system { justify-content: center; }
@@ -387,12 +387,22 @@ const SEAT_SET = new Set(SEAT_ORDER);
 
 function makeAvatar(name, color, border, glyph, size) {
   const s = size || 24;
-  return `<svg viewBox="0 0 ${s} ${s}" style="width:${s}px;height:${s}px;flex-shrink:0;border-radius:3px;">
-    <circle cx="${s/2}" cy="${s/2}" r="${s/2-1}" fill="${color}" stroke="${border}" stroke-width="1"/>
-    <circle cx="${s*0.35}" cy="${s*0.4}" r="${s*0.05}" fill="${border}" opacity="0.7"/>
-    <circle cx="${s*0.65}" cy="${s*0.4}" r="${s*0.05}" fill="${border}" opacity="0.7"/>
-    <text x="${s/2}" y="${s*0.72}" text-anchor="middle" font-size="${s*0.22}" fill="${border}" opacity="0.5" font-family="sans-serif">${glyph}</text>
+  const h = s; const w = s;
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:${w}px;height:${h}px;flex-shrink:0;border-radius:4px;">
+    <defs><radialGradient id="bg-${name}" cx="30%" cy="30%"><stop offset="0%" stop-color="${lighten(color)}"/><stop offset="100%" stop-color="${color}"/></radialGradient></defs>
+    <circle cx="${s/2}" cy="${s/2}" r="${s/2-1}" fill="url(#bg-${name})" stroke="${border}" stroke-width="1.5"/>
+    <circle cx="${s*0.33}" cy="${s*0.38}" r="${s*0.045}" fill="${border}" opacity="0.8"/>
+    <circle cx="${s*0.67}" cy="${s*0.38}" r="${s*0.045}" fill="${border}" opacity="0.8"/>
+    <path d="M${s*0.3} ${s*0.58} Q${s/2} ${s*0.66} ${s*0.7} ${s*0.58}" fill="none" stroke="${border}" stroke-width="${s*0.04}" stroke-linecap="round" opacity="0.6"/>
+    <text x="${s/2}" y="${s*0.75}" text-anchor="middle" font-size="${s*0.22}" fill="${border}" opacity="0.4" font-family="sans-serif">${glyph}</text>
   </svg>`;
+}
+function lighten(hex) {
+  const c = parseInt(hex.slice(1),16);
+  const r = Math.min(255, (c>>16) + 40);
+  const g = Math.min(255, ((c>>8)&255) + 40);
+  const b = Math.min(255, (c&255) + 40);
+  return '#' + ((1<<24) + (r<<16) + (g<<8) + b).toString(16).slice(1);
 }
 
 function charAvatar(name, size) {
@@ -713,7 +723,6 @@ function sendMessage() {
   const text = input.value.trim();
   if (!text || _currentPersp === 'host') return;
   input.value = '';
-  // 如果未接管，自动接管
   const manualSet = new Set(window._lastManualPlayers || []);
   if (!manualSet.has(_currentPersp)) {
     fetch('/api/manual_toggle', {
@@ -724,6 +733,9 @@ function sendMessage() {
   fetch('/api/manual_input', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({content: text}),
+  }).then(r=>r.json()).then(d => {
+    if (d.status === 'ignored') showToast('⏳ 还没轮到你');
+    else addMsgLocal(_currentPersp, text, 'ai');
   });
 }
 

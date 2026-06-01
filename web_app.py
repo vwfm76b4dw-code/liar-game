@@ -710,6 +710,8 @@ async def api_auto(req: Request):
     elif action == "stop":
         state.auto_stopped = True
         state.auto_mode = False
+        state.manual_event.set()  # 解除 _await_manual_input 阻塞
+        state.awaiting_manual = None
         return {"status": "stopped", "auto_mode": False}
     return {"status": "unknown"}
 
@@ -754,16 +756,17 @@ async def api_manual_toggle(req: Request):
 async def api_manual_input(req: Request):
     body = await req.json()
     content = body.get("content", "")
+    # 只有游戏正在等待此角色输入时才处理
+    if not state.awaiting_manual:
+        return {"status": "ignored", "reason": "not waiting"}
     state.manual_input_data = content
     state.manual_event.set()
-    # 立即将用户输入显示在对话中，提供视觉反馈
-    if state.awaiting_manual:
-        char_name = state.awaiting_manual.get("character", "")
-        action_type = state.awaiting_manual.get("type", "speak")
-        if action_type == "vote":
-            state.log(char_name, f"投票：{content}", "vote")
-        else:
-            state.log(char_name, content, "ai")
+    char_name = state.awaiting_manual.get("character", "")
+    action_type = state.awaiting_manual.get("type", "speak")
+    if action_type == "vote":
+        state.log(char_name, f"投票：{content}", "vote")
+    else:
+        state.log(char_name, content, "ai")
     return {"status": "received"}
 
 
