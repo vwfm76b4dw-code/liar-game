@@ -1,237 +1,297 @@
 <h1 align="center">🎭 说谎者 · 终焉之地</h1>
+<h1 align="center">The Liar · Terminal Land</h1>
 
 <p align="center">
   <strong>基于《十日终焉》的 AI 角色扮演博弈游戏</strong>
   <br>
-  DeepSeek V4-Pro / V4-Flash 双模型驱动 · 9 位原著角色 · 自动/手动双模式 · 微信风格 UI
+  <strong>An AI Role-Playing Deception Game based on the novel "Ten Days to Eternity"</strong>
+  <br><br>
+  DeepSeek V4-Pro / V4-Flash · 9 Characters · Auto/Manual Modes · WeChat-style UI
+</p>
+
+<p align="center">
+  <a href="https://github.com/vwfm76b4dw-code/liar-game">GitHub</a> ·
+  <a href="#-关于十日终焉">📖 关于原著</a> ·
+  <a href="#-changelog">📝 Changelog</a>
 </p>
 
 ---
 
-## 📖 世界观
+## 📖 关于《十日终焉》/ About the Novel
+
+> *十日终焉（Ten Days to Eternity）* 是中国网络作家 **烟灰** 创作的悬疑推理小说，连载于起点中文网。
+> 故事讲述一群被困在「终焉之地」的人们，被迫参加由十二生肖主持的死亡游戏。
+> 每个游戏都是对人性的极致考验——说谎、信任、背叛、牺牲。
+> 角色们在无尽的轮回中寻找真相、救赎与自由。
+
+> *"Ten Days to Eternity" is a Chinese web novel by **Yan Hui**, serialized on Qidian.
+> It tells the story of people trapped in the "Terminal Land", forced to participate in deadly games
+> hosted by the Chinese Zodiac. Each game is an ultimate test of human nature — lying, trust, betrayal, sacrifice.
+> Characters seek truth, redemption, and freedom through endless cycles.*
+
+- **作者 / Author**: 烟灰 (Yan Hui)
+- **平台 / Platform**: 起点中文网 (Qidian) · [查看原著]()
+- **标签 / Tags**: 悬疑 · 推理 · 智斗 · 轮回 · 群像
+
+---
+
+## 🌍 世界观 / World Setting
 
 > *「你们当中，**有且只有一个说谎者**。抽到说谎者的人，必须在故事中掺杂谎言。」*
 > *——🐑 人羊*
 
+> *"Among you, there is **only one liar**. The one who draws the liar card must weave lies into their story."*
+> *—— 🐑 Goat*
+
+**中文：**
 在**终焉之地**，被选中的参与者们被迫参加由生肖主持人掌控的生死游戏。九个人围坐在一张斑驳的圆桌前，每人抽一张背写「女娲游戏」的卡牌——其中一张是「说谎者」。
+规则看似简单——每人讲述自己的死亡故事，说谎者必须在故事中掺杂谎言。讨论、投票、处决。
+但真相远不止于此：**所有人抽到的都是「说谎者」**，每人都在欺骗彼此，也都在被规则欺骗。
 
-**规则看似简单：** 每人讲述自己的死亡故事，说谎者必须在故事中掺杂谎言。讨论、投票、处决。但真相远不止于此——原著中，**所有人抽到的都是「说谎者」**，每人都在欺骗彼此，也都在被规则欺骗。
-
----
-
-## ✨ 核心特性
-
-### 🎮 双模式游玩
-| 模式 | 说明 |
-|------|------|
-| **👑 观察者模式** | 以人羊视角旁观整局游戏，AI 自动推进 |
-| **🎮 角色接管** | 点击任意角色切换视角，可手动操控发言/投票 |
-
-### 🤖 AI 驱动
-- **齐夏 → DeepSeek V4-Pro**（深度推理，16K 思考预算）
-- **其余 8 人 → DeepSeek V4-Flash**（快速响应）
-- 每位角色拥有独立的**系统提示词**、**心理状态**、**背景档案**
-- AI **思考过程**实时展示（仅操控者可见）
-- **✨ AI 辅助**：卡壳时一键生成发言建议，可确认后发送
-
-### 💬 微信风格聊天界面
-- 角色头像（SVG 像素风）、名称、时间戳
-- 消息气泡按类型分色（人羊橙 / AI 绿 / 投票紫 / 回响黄）
-- 左侧角色列表，一键切换视角
-- 仅在滚动条底部时自动跟随新消息
-
-### 🧠 回响系统
-忠于原著的觉醒机制——当角色在思考过程中流露与觉醒契机一致的情感时，触发回响觉醒（基于 `agent.thoughts` 判定，而非公开发言）：
-
-| 角色 | 回响 | 觉醒契机 |
-|------|------|----------|
-| 齐夏 | 灵闻 | 对妻子的极致执念 |
-| 乔家劲 | 破万法 | 面对不公时保护他人的信念 |
-| 甜甜 | 巧物 | 为帮助他人迫切创造有形之物 |
-| 赵海博 | 离析 | 冷静分析万物结构时洞察崩坏 |
-| 韩一墨 | 招灾 | 极致的恐惧——越怕越来 |
-| 章晨泽 | 移魂 | 面对不公裁决渴望扭转结局 |
-| 李尚武 | 探囊 | 濒死时保护他人的决意 |
-| 林檎 | 激发 | 激励他人突破极限 |
-| 肖冉 | 祸水 | 依附强者时带去混乱 |
-
-### 🗳 投票机制
-- 全员投票给「人羊」→ 发现真相，**众人获胜**
-- 投票不统一 → 全员处决，**人羊获胜**
-- 已接管角色可在投票时手动输入
-
-### 📜 对话导出
-点击顶部 💾 按钮，一键导出完整对话记录（.txt），含时间戳和角色发言。
+**English:**
+In the **Terminal Land**, selected participants are forced to play life-or-death games hosted by the Zodiac. Nine people sit around a worn round table, each drawing a card with "Nuwa Game" on the back — one of them is the "Liar".
+The rules seem simple — each person tells their death story, and the liar must weave lies into it. Discussion, voting, execution.
+But the truth runs deeper: **everyone drew the "Liar" card**. Everyone is deceiving each other, and everyone is being deceived by the rules.
 
 ---
 
-## 🏗️ 架构
+## ✨ 核心特性 / Features
+
+### 🎮 双模式游玩 / Dual Game Modes
+| 模式 / Mode | 说明 / Description |
+|------------|-------------------|
+| **👑 观察者模式 / Observer** | 以人羊视角旁观，AI 自动推进 / Watch as Goat, AI auto-plays |
+| **🎮 角色接管 / Possess** | 点击角色切换视角，手动操控发言投票 / Click to possess any character |
+
+### 🤖 AI 驱动 / AI-Powered
+- **齐夏 → DeepSeek V4-Pro**（深度推理 16K 预算 / Deep reasoning, 16K thinking budget）
+- **其余 8 人 → DeepSeek V4-Flash**（快速响应 / Fast response）
+- 每位角色独立提示词、心理状态、背景档案 / Per-character system prompts & psychological profiles
+- AI **思考过程**实时展示（仅操控者可见） / Real-time **thinking process** visible only to the controller
+- **✨ AI 辅助 / AI Assist**：一键生成发言建议 / One-click suggestion generation
+
+### 💬 微信风格聊天 / WeChat-style Chat
+- SVG 像素风头像 / SVG pixel-art avatars
+- 消息气泡按类型分色 / Color-coded message bubbles
+- 左侧角色列表一键切换视角 / One-click perspective switch
+- 智能自动滚动 / Smart auto-scroll
+
+### 🧠 回响系统 / Echo System
+忠于原著——当角色的**思考过程**流露觉醒契机时触发回响（基于 `agent.thoughts` 而非公开发言判定）：
+Faithful to the novel — Echos are triggered when a character's **thought process** reveals awakening conditions (judged by `agent.thoughts`, not public speech):
+
+| 角色 Character | 回响 Echo | 觉醒契机 Trigger |
+|---------------|-----------|-----------------|
+| 齐夏 | 灵闻 / Sound | 对妻子的执念 / Obsession with his wife |
+| 乔家劲 | 破万法 / Breaker | 保护他人的信念 / Belief in protecting others |
+| 甜甜 | 巧物 / Crafter | 帮助他人的渴望 / Urge to help |
+| 赵海博 | 离析 / Dissolve | 洞察万物结构 / Perceiving structure |
+| 韩一墨 | 招灾 / Disaster | 极致的恐惧 / Extreme fear |
+| 章晨泽 | 移魂 / Soul Shift | 面对不公 / Facing injustice |
+| 李尚武 | 探囊 / Reach | 保护他人的决意 / Determination to protect |
+| 林檎 | 激发 / Inspire | 激励他人 / Inspiring others |
+| 肖冉 | 祸水 / Plague | 依附强者 / Clinging to power |
+
+### 🗳 投票机制 / Voting
+- 全员投票给人羊 → 众人获胜 / Vote Goat unanimously → **Players win**
+- 投票不统一 → 全员处决，人羊获胜 / Split vote → **Goat wins**, all executed
+- 已接管角色可手动投票 / Possessed characters can vote manually
+
+### 📜 对话导出 / Export
+点击 💾 导出完整对话记录 `.txt` / Click 💾 to export full chat history as `.txt`
+
+---
+
+## 🏗️ 项目架构 / Architecture
 
 ```
 liar-game/
-├── web_app.py              # FastAPI 主服务器
+├── web_app.py              # FastAPI 主服务器 / Main server
 ├── templates/
-│   └── liar_web.html       # 微信风格前端 UI
-├── static/fonts/           # 字体文件
-├── agent.py                # AI Agent（参与者 + 主持人）
-├── llm_client.py           # DeepSeek API 封装
-├── config.py               # 配置加载
-├── models.py               # Pydantic 数据模型
-├── echo_system.py          # 回响觉醒判定
-├── memory_manager.py       # 跨轮回记忆管理
-├── game_engine.py          # 游戏引擎（CLI）
-├── main.py                 # CLI 入口
+│   └── liar_web.html       # 前端 UI / Frontend
+├── static/fonts/           # 字体 / Fonts
+├── agent.py                # AI Agent（参与者+主持人 / Characters + Host）
+├── llm_client.py           # DeepSeek API 封装 / API wrapper
+├── config.py               # 配置 / Config
+├── models.py               # 数据模型 / Data models
+├── echo_system.py          # 回响觉醒 / Echo awakening
+├── memory_manager.py       # 跨轮回记忆 / Cross-cycle memory
+├── game_engine.py          # CLI 游戏引擎 / CLI engine
+├── main.py                 # CLI 入口 / CLI entry
 ├── data/
-│   ├── characters.json     # 9 位角色完整档案
-│   ├── zodiacs.json        # 生肖主持人
-│   └── organizations.json  # 三大组织
+│   ├── characters.json     # 角色档案 / Character profiles
+│   ├── zodiacs.json        # 生肖主持人 / Zodiac hosts
+│   └── organizations.json  # 组织 / Organizations
 ├── prompts/
-│   └── templates.py        # 提示词模板
+│   └── templates.py        # 提示词模板 / Prompt templates
 └── games/
-    ├── base.py             # 游戏基类
-    └── liar_game.py        # 说谎者游戏逻辑
+    ├── base.py             # 游戏基类 / Base game
+    └── liar_game.py        # 说谎者逻辑 / Liar game logic
 ```
 
 ---
 
-## 🚀 快速开始
+## 🚀 快速开始 / Quick Start
 
-### 1. 安装依赖
+### 1. 安装依赖 / Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. 配置 API Key
+### 2. 配置 API Key / Configure
 
 ```bash
-# 复制配置
 cp .env.example .env
-
 # 编辑 .env，填入你的 DeepSeek API Key
+# Edit .env and fill in your DeepSeek API Key
+```
+
+`.env`:
+```env
 DEEPSEEK_API_KEY="sk-your-key-here"
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 DEEPSEEK_MODEL=deepseek-v4-pro
+DEEPSEEK_THINKING_BUDGET=16384
 ```
 
-### 3. 启动 Web 服务器
+### 3. 启动 Web 服务器 / Start Server
 
 ```bash
 python web_app.py
 ```
 
-打开浏览器访问 **http://localhost:8910**
+Open **http://localhost:8910**
 
-### 4. 游戏操作
+### 4. 游戏操作 / Game Controls
 
-| 操作 | 方式 |
-|------|------|
-| **开始游戏** | 点击「进入游戏」|
-| **自动推进** | 点击顶部「▶ 自动」|
-| **暂停/继续** | 点击「⏸」|
-| **切换视角** | 点击左侧角色列表 |
-| **接管角色** | 观察角色时点击「🎮 接管」|
-| **手动发言** | 接管后输入文字按回车 |
-| **AI 辅助** | 点击「✨ AI帮写」生成建议 |
-| **释放角色** | 点击「释放」恢复 AI 自动 |
-| **导出对话** | 点击顶部「💾」|
-
----
-
-## 🎭 角色档案
-
-> 每位角色拥有完整的原著背景、死亡经历、性格特征和心理状态。
-
-### 🃏 齐夏 — 永恒的殉道者
-> *「一切皆为棋子，包括我自己。」*
-
-26 岁，青岛人，职业骗子。曾化身十二生肖中的「白羊」，被天龙暗算。因关于妻子余念安的假消息被诱杀，撬棍击后脑致死。回响：**灵闻**。
-
-### 🤜 乔家劲 — 市井赤子
-> *「滴水之恩，涌泉相报。」*
-
-28 岁，香港砵兰街人。替恩人荣爷顶罪入狱 4 年，为兄弟九仔复仇被推下时代广场天台。回响：**破万法**。
-
-### 🍎 林檎 — 终焉之地的亲生女儿
-> *「我的记忆是假的——那我还算活着吗？」*
-
-24 岁，表面是心理咨询师。实为终焉之地自然孕育的第一颗果实，被青龙化形为人类，植入了虚假记忆。回响：**激发**。
-
-### 👧 甜甜（张丽娟）— 坚韧的负重者
-> *「我早就失去一切了，所以我不怕再失去什么。」*
-
-22 岁，陕西农村女孩。为弟弟的十几万手术费辍学打工，被工厂老板骚扰、被全厂孤立——18 岁的「千里背债」。回响：**巧物**。
-
-### 🛡️ 李尚武 — 灰色执法者
-> *「别怕，叔叔在这儿。」——临终遗言*
-
-35 岁，内蒙古刑侦支队长。为给女儿治病沦为黑警，充当毒贩保护伞。2010 年呼和浩特追捕中被击中心脏。回响：**探囊**。
-
-### 👻 韩一墨 — 被恐惧围猎的巨婴
-> *「越害怕的事情，就越会发生——因为我的能力叫『招灾』。」*
-
-29 岁，广西网络作家。造黄谣害死无辜女生，保留七年完整轮回记忆。凌晨南宁天桥失足坠亡。回响：**招灾**。
-
-### 💣 肖冉 — 扭曲的寄生者
-> *「到死她都不知道，那个四岁女孩是否就是被她拐走的——这是她悲剧中最大的讽刺。」*
-
-23 岁，云南大理幼师。家境贫寒让她嫉妒成狂，贩卖儿童并栽赃同事陈婷。被车撞死。回响：**祸水**。
-
-### ⚖️ 章晨泽（章莱娣）— 破茧的复仇者
-> *「法律给不了我公平——所以我亲手拿了。」*
-
-32 岁，四川律师。原名章莱娣，被父母以 6.6 万元卖给马屠户。杀掉全家、纵火烧屋，地震中从高架桥坠落。回响：**移魂**。
-
-### 🔪 赵海博 — 破碎的救赎者
-> *「只要我尽力了，就可以心安理得地卸下所有道德包袱——我一直是这么告诉自己的。」*
-
-45 岁，江苏脑外科医生。放弃逃生试图救患者，最终患者脑干反射消失，自己被天花板砸死。回响：**离析**。
+| 操作 Action | 方式 Control |
+|------------|-------------|
+| **开始游戏 Start** | 点击「进入游戏」/ Click "Enter Game" |
+| **自动推进 Auto** | 点击顶部「▶ 自动」/ Click "▶ Auto" |
+| **暂停/继续 Pause** | 点击「⏸」/ Click "⏸" |
+| **切换视角 Switch** | 点击左侧角色 / Click character in sidebar |
+| **接管角色 Possess** | 点击「🎮 接管」/ Click "🎮 Take Over" |
+| **手动发言 Speak** | 输入文字按回车 / Type and press Enter |
+| **AI 辅助 Assist** | 点击「✨ AI帮写」/ Click "✨ AI Assist" |
+| **释放角色 Release** | 点击「释放」/ Click "Release" |
+| **导出对话 Export** | 点击顶部「💾」/ Click top "💾" |
+| **停止 Stop** | 点击「⏹」/ Click "⏹" |
 
 ---
 
-## 🐑 生肖主持人
+## 🎭 角色档案 / Characters
 
-| 名称 | 等级 | 面具 | 残暴度 |
-|------|------|------|--------|
-| 人羊 | 人级 | 🐑 | 7/10 |
-| 人鼠 | 人级 | 🐀 | 5/10 |
-| 地蛇 | 地级 | 🐍 | 9/10 |
-| 天龙 | 天级 | 🐉 | 8/10 |
+### 🃏 齐夏 (Qi Xia) — 永恒的殉道者 / Eternal Martyr
+> *「一切皆为棋子，包括我自己。」 / "Everything is a pawn, including me."*
+
+26 岁，青岛人，职业骗子。曾化身「白羊」生肖被天龙暗算，因妻子假消息被撬棍击毙。
+回响 Echo：**灵闻 / Sound Sense**
+
+### 🤜 乔家劲 (Qiao Jiajin) — 市井赤子 / Street Knight
+> *「滴水之恩，涌泉相报。」 / "A drop of kindness returns as a gushing spring."*
+
+28 岁，香港砵兰街人。替恩人顶罪入狱 4 年，为兄弟复仇被推下天台。
+回响 Echo：**破万法 / Breaker**
+
+### 🍎 林檎 (Lin Qin) — 终焉之地的亲生女儿 / The Land's Own Daughter
+> *「我的记忆是假的——那我还算活着吗？」 / "My memories are fake — am I even alive?"*
+
+24 岁。实为终焉之地孕育的第一颗果实，被青龙化形为人类。
+回响 Echo：**激发 / Inspire**
+
+### 👧 甜甜 (Tiantian) — 坚韧的负重者 / Resilient Bearer
+> *「我早就失去一切了，所以我不怕再失去什么。」 / "I've already lost everything, so I'm not afraid to lose anymore."*
+
+22 岁，陕西农村女孩。为弟弟手术费辍学打工，被工厂孤立，千里背债。
+回响 Echo：**巧物 / Crafter**
+
+### 🛡️ 李尚武 (Li Shangwu) — 灰色执法者 / Gray Enforcer
+> *「别怕，叔叔在这儿。」 / "Don't be afraid, Uncle is here."*
+
+35 岁，内蒙刑侦支队长。为女儿治病沦为黑警，追捕毒贩中被击中牺牲。
+回响 Echo：**探囊 / Reach**
+
+### 👻 韩一墨 (Han Yimo) — 被恐惧围猎者 / Hunted by Fear
+> *「越害怕的事情，就越会发生。」 / "The more you fear something, the more it happens."*
+
+29 岁，广西网络作家。造黄谣害死无辜女生，保留七年轮回记忆。
+回响 Echo：**招灾 / Disaster**
+
+### 💣 肖冉 (Xiao Ran) — 扭曲的寄生者 / Twisted Parasite
+> *「到死她都不知道，那个女孩是否就是被她拐走的。」 / "To her death, she never knew if that girl was one she trafficked."*
+
+23 岁，大理幼师。贩卖儿童并栽赃同事，被车撞死。
+回响 Echo：**祸水 / Plague**
+
+### ⚖️ 章晨泽 (Zhang Chenze) — 破茧的复仇者 / Avenger Reborn
+> *「法律给不了我公平——所以我亲手拿了。」 / "The law couldn't give me justice — so I took it myself."*
+
+32 岁，四川律师。被父母卖给屠户，杀掉全家后地震中坠落。
+回响 Echo：**移魂 / Soul Shift**
+
+### 🔪 赵海博 (Zhao Haibo) — 破碎的救赎者 / Broken Redeemer
+> *「只要我尽力了，就可以心安理得。」 / "As long as I did my best, I can be at peace."*
+
+45 岁，江苏脑外科医生。地震中放弃逃生救患者，被天花板砸死。
+回响 Echo：**离析 / Dissolve**
 
 ---
 
-## 🔧 开发扩展
+## 🐑 生肖主持人 / Zodiac Hosts
 
-### 添加新角色
-编辑 `data/characters.json`，按格式添加角色档案。
-
-### 修改回响
-编辑 `echo_system.py` 的 `ECHO_DEFS` 字典，调整觉醒条件。
-
-### 切换 LLM
-修改 `.env` 中的模型名称：
-```env
-DEEPSEEK_MODEL=deepseek-v4-pro   # 齐夏
-# flash_llm.config.model 在 web_app.py 中设置
-```
-
-### 自定义提示词
-编辑 `prompts/templates.py` 中的系统提示词模板。
+| 名称 Name | 等级 Tier | 面具 Mask | 残暴 Cruelty |
+|-----------|----------|-----------|-------------|
+| 人羊 Goat | 人级 Human | 🐑 | 7/10 |
+| 人鼠 Rat | 人级 Human | 🐀 | 5/10 |
+| 地蛇 Snake | 地级 Earth | 🐍 | 9/10 |
+| 天龙 Dragon | 天级 Heaven | 🐉 | 8/10 |
 
 ---
 
-## 📂 提交记录
+## 🔧 开发扩展 / Development
 
-```
-4119c6f fix: 手动输入立即显示 + 投票支持手动接管
-0e48076 fix: 回车自动发送 + 输入即接管 + [待补充]替代兜底
-85be32f feat: 对话导出 + 回响觉醒基于思考过程判定
-5c6a2af fix: 新消息自动滚动只在用户处于底部时触发
-52cc0fa feat: 说谎者游戏完整版
-```
+- **添加角色 / Add Characters**: 编辑 `data/characters.json`
+- **修改回响 / Modify Echos**: 编辑 `echo_system.py` 的 `ECHO_DEFS`
+- **切换 LLM / Switch LLM**: 修改 `.env` 模型名 / Change model name in `.env`
+- **自定义提示词 / Custom Prompts**: 编辑 `prompts/templates.py`
+- **添加游戏类型 / Add Game Type**: 继承 `games/base.py`
 
 ---
 
-## 📜 许可
+## 📝 Changelog
 
-本项目仅供学习和研究使用。角色和世界观版权归原著《十日终焉》（作者：烟灰）所有。
+### v1.0.0 — 2026-06-01
+初始发布 / Initial Release
+
+#### 功能 / Features
+- DeepSeek V4-Pro / V4-Flash 双模型驱动 / Dual model driving
+- 齐夏专用 V4-Pro，其余 V4-Flash / Qixia uses V4-Pro, others V4-Flash
+- 微信风格聊天 UI / WeChat-style chat UI
+- 角色 SVG 像素头像 / SVG pixel-art character avatars
+- 视角切换系统 / Perspective switching system
+- 角色手动接管 / Manual character possession
+- AI 辅助发言建议 / AI-assisted speech suggestions
+- 回响觉醒系统（基于思考过程判定） / Echo awakening system (thought-based)
+- 自动流程 + 暂停/停止 / Auto-flow + pause/stop
+- 对话导出 (TXT) / Chat export (TXT)
+- 智能自动滚动 / Smart auto-scroll
+- API 失败兜底 [待补充] / Graceful API fallback [Pending]
+- 投票手动接管 / Manual voting control
+- 回车自动发送 / Enter to send
+
+#### 角色 / Characters
+- 9 位角色完整原著档案 / Complete novel-accurate profiles for all 9 characters
+- 独立提示词 + 心理状态 / Independent prompts + psychological states
+- 跨轮回记忆系统 / Cross-cycle memory system
+
+### v0.9.0 — 2026-05-30
+- 初始框架搭建 / Initial framework
+- CLI 版本 / CLI version
+
+---
+
+## 📜 许可 / License
+
+本项目仅供学习和研究使用。《十日终焉》角色和世界观版权归作者 **烟灰** 所有。
+This project is for learning and research purposes only. "Ten Days to Eternity" characters and world are copyrighted by author **Yan Hui**.
