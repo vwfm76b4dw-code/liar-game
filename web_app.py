@@ -71,6 +71,7 @@ class GameState:
         # 视角系统
         self.current_perspective: str = "host"
         self.character_auto: dict[str, bool] = {}
+        self._discussion_active = False
 
     def reset_cycle(self):
         self.phase = "intro"
@@ -117,7 +118,11 @@ async def _auto_loop():
             elif phase == "storytelling":
                 await asyncio.sleep(1)
             elif phase == "discussion":
-                await asyncio.sleep(1)
+                # 自动恢复被中断的讨论
+                if state.auto_mode and not state.auto_paused and not state._discussion_active:
+                    await _run_freediscussion()
+                else:
+                    await asyncio.sleep(1)
             elif phase == "round_end":
                 await _exec_action("start_round" if state.round_num < state.total_rounds else "run_voting")
             elif phase == "voting":
@@ -183,7 +188,7 @@ async def _exec_action(action: str) -> None:
                 try:
                     story, _ = await _run_blocking(agent.tell_story, i + 1)
                 except Exception:
-                    story = "我……我不太记得了。"
+                    story = "[待补充]"
             state.log(name, f"📖 {story}", "ai")
             # 每条故事间暂停让前端有时间渲染
             if state.auto_mode:
@@ -225,6 +230,14 @@ async def _exec_action(action: str) -> None:
 
 async def _run_freediscussion():
     """自由讨论 — 自然交锋"""
+    state._discussion_active = True
+    try:
+        await _do_freediscussion()
+    finally:
+        state._discussion_active = False
+
+
+async def _do_freediscussion():
     state.log("系统", f"═════ 第 {state.round_num} 轮自由讨论 ═════", "system")
     participants = list(state.participants)
     random.shuffle(participants)
@@ -278,10 +291,10 @@ async def _run_freediscussion():
     if state.round_num < state.total_rounds:
         state.round_num += 1
         state.phase = "discussion"
-        if state.auto_mode and not state.auto_stopped:
+        if state.auto_mode and not state.auto_paused and not state.auto_stopped:
             await asyncio.sleep(2)
-            if not state.auto_stopped:
-                await _run_freediscussion()
+            if not state.auto_paused and not state.auto_stopped:
+                await _do_freediscussion()
     else:
         state.phase = "voting"
         if state.auto_mode and not state.auto_stopped:
@@ -767,10 +780,18 @@ def _wait_manual(action_type: str, character: str, context: str = ""):
 
 
 async def _await_manual_input() -> str:
-    """等待用户提交手动输入"""
+    """等待用户提交手动输入（可被 auto_stopped 中断）"""
     state.manual_event.clear()
     state.manual_input_data = ""
-    await state.manual_event.wait()
+    while not state.auto_stopped:
+        try:
+            await asyncio.wait_for(state.manual_event.wait(), timeout=1.0)
+            break
+        except asyncio.TimeoutError:
+            continue
+    if state.auto_stopped:
+        state.awaiting_manual = None
+        return ""
     content = state.manual_input_data
     state.awaiting_manual = None
     state.manual_input_data = ""
@@ -786,7 +807,7 @@ async def _run_storytelling() -> dict:
         try:
             story, _ = await _run_blocking(agent.tell_story, i + 1)
         except Exception:
-            story = "我……我不太记得了。"
+            story = "[待补充]"
         state.log(name, f"📖 {story}", "ai")
 
     state.log("系统", "所有故事讲完。开始自由讨论——找出说谎者！", "system")
