@@ -559,6 +559,9 @@ async function loadSave() {
     document.getElementById('input-bar').style.display = 'flex';
     document.getElementById('auto-controls').style.display = 'flex';
     document.getElementById('control-panel').style.display = 'flex';
+    // 清空旧对话
+    document.getElementById('chat-area').innerHTML = '';
+    _seen.clear();
     document.getElementById('user-input').disabled = true;
     document.getElementById('user-input').placeholder = '实验已加载';
     document.getElementById('input-prompt').innerHTML = '📂 实验已恢复 — 包含 ' + data.dialog.length + ' 条对话';
@@ -590,6 +593,9 @@ async function startGame() {
   document.getElementById('input-bar').style.display = 'flex';
   document.getElementById('auto-controls').style.display = 'flex';
   document.getElementById('control-panel').style.display = 'flex';
+  // 清空旧对话
+  document.getElementById('chat-area').innerHTML = '';
+  _seen.clear();
   const resp = await fetch('/api/start', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({rounds: 2}),
