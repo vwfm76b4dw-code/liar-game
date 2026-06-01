@@ -391,7 +391,9 @@ body {
     <button class="aa-btn confirm" onclick="confirmAIAssist()">✓ 确认</button>
     <button class="aa-btn cancel" onclick="closeAIAssist()">✗ 取消</button>
   </div>
-</div>
+</div><!-- AI assist overlay close -->
+
+</div><!-- app close -->
 
 <!-- Setup overlay -->
 <div id="setup-panel">
@@ -400,7 +402,7 @@ body {
     <div class="subtitle">终焉之地 · 实验</div>
     <div style="margin:20px 0;">
       <button class="setup-btn primary" onclick="startGame()">🧪 新建实验</button>
-      <button class="setup-btn" id="btn-load-save" onclick="loadSave()">📂 加载实验</button>
+      <button class="setup-btn" id="btn-load-save" onclick="loadSave()">📂 加载实验</button>>
     </div>
     <div class="setup-divider"></div>
     <small style="color:#504030;font-size:10px;">基于《十日终焉》· 看AI何时通关</small>
@@ -703,13 +705,15 @@ function updateSidebarFromState(data) {
 
 // ── Dialog ──
 function syncDialog(dialog) {
+  console.log('[DEBUG] syncDialog called with', dialog?.length, 'messages');
   if (!dialog || !dialog.length) return;
   const area = document.getElementById('chat-area');
-  // 记录用户是否在底部（距底部 < 50px 视为在底部）
-  const wasAtBottom = area.scrollHeight - area.scrollTop - area.clientHeight < 50;
+  if (!area) { console.error('[DEBUG] chat-area not found!'); return; }
+  let added = 0;
   dialog.forEach(msg => {
     if (_seen.has(msg.id)) return;
     _seen.add(msg.id);
+    added++;
     const row = document.createElement('div');
     const type = msg.type || 'ai';
     if (type === 'system' || type === 'scene') {
@@ -736,9 +740,9 @@ function syncDialog(dialog) {
       '<div class="msg-bubble">'+(msg.content||'')+'</div></div>';
     area.appendChild(row);
   });
-  // 只在用户原本就在底部时才自动滚动
-  if (wasAtBottom) {
-    requestAnimationFrame(() => { area.scrollTop = area.scrollHeight; });
+  console.log('[DEBUG] syncDialog added', added, 'messages');
+  if (area.scrollHeight > area.clientHeight) {
+    area.scrollTop = area.scrollHeight;
   }
 }
 
