@@ -72,6 +72,45 @@ class GameState:
         self.current_perspective: str = "host"
         self.character_auto: dict[str, bool] = {}
         self._discussion_active = False
+        self._save_path = Path(__file__).parent / "data" / "last_save.json"
+
+    def save_state(self):
+        """保存对话与游戏状态到 data/last_save.json"""
+        try:
+            data = {
+                "dialog_log": self.dialog_log[-500:],  # 最多存500条
+                "phase": self.phase,
+                "current_cycle": self.current_cycle,
+                "round_num": self.round_num,
+                "total_rounds": self.total_rounds,
+                "total_words": self.total_words,
+                "all_qa": [q.model_dump() for q in self.all_qa[-100:]] if self.all_qa else [],
+                "votes": [v.model_dump() for v in self.votes] if self.votes else [],
+                "awakening_results": [a.model_dump() for a in self.awakening_results] if self.awakening_results else [],
+                "manual_players": list(self.manual_players),
+                "saved_at": __import__("datetime").datetime.now().isoformat(),
+            }
+            self._save_path.parent.mkdir(parents=True, exist_ok=True)
+            self._save_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        except Exception:
+            pass  # 保存失败不影响游戏
+
+    def load_save(self) -> bool:
+        """加载上次保存的对话记录"""
+        if not self._save_path.exists():
+            return False
+        try:
+            data = json.loads(self._save_path.read_text(encoding="utf-8"))
+            self.dialog_log = data.get("dialog_log", [])
+            self.phase = data.get("phase", "idle")
+            self.current_cycle = data.get("current_cycle", 1)
+            self.round_num = data.get("round_num", 0)
+            self.total_rounds = data.get("total_rounds", 3)
+            self.total_words = data.get("total_words", 0)
+            self.manual_players = set(data.get("manual_players", []))
+            return True
+        except Exception:
+            return False
 
     def reset_cycle(self):
         self.phase = "intro"
@@ -96,6 +135,9 @@ class GameState:
             "timestamp": __import__("datetime").datetime.now().strftime("%H:%M:%S"),
         }
         self.dialog_log.append(entry)
+        # 自动保存（每10条存一次，避免频繁IO）
+        if len(self.dialog_log) % 10 == 0:
+            self.save_state()
         return entry
 
 state = GameState()
@@ -394,6 +436,7 @@ def _announce_result_internal():
     non_awakened = [a.name for a in state.participants
                     if not any(r.awakened and r.character_name == a.name for r in state.awakening_results)]
     state.mem_mgr.wipe_non_awakened(non_awakened)
+    state.save_state()
     state.phase = "result"
     if state.auto_mode and not state.auto_stopped:
         # auto loop 会处理 delay + next_cycle 过渡
@@ -667,6 +710,29 @@ async def api_auto(req: Request):
         state.auto_mode = False
         return {"status": "stopped", "auto_mode": False}
     return {"status": "unknown"}
+
+
+# ── 存档系统 ──
+
+@app.post("/api/load_save")
+async def api_load_save():
+    """加载上次保存的对话记录"""
+    loaded = state.load_save()
+    return {
+        "loaded": loaded,
+        "dialog": state.dialog_log[-50:] if loaded else [],
+        "phase": state.phase,
+        "status": f"存档已加载（{len(state.dialog_log)}条）" if loaded else "无存档",
+    }
+
+@app.post("/api/delete_save")
+async def api_delete_save():
+    """删除存档"""
+    save_path = Path(__file__).parent / "data" / "last_save.json"
+    if save_path.exists():
+        save_path.unlink()
+        return {"deleted": True}
+    return {"deleted": False}
 
 
 # ── 手动操控 ──
@@ -1055,6 +1121,9 @@ async def _next_cycle() -> dict:
 
 @app.get("/api/state")
 def get_state():
+    # 无游戏时自动加载上次存档
+    if state.phase == "idle" and not state.dialog_log:
+        state.load_save()
     awakened = [r.character_name for r in state.awakening_results if r.awakened]
     return {
         "dialog": state.dialog_log[-50:],

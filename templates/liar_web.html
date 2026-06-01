@@ -363,6 +363,8 @@ body {
   <div class="subtitle">终焉之地 · 九死一生</div>
   <small>基于《十日终焉》</small>
   <button class="btn-start" onclick="startGame()">进 入 游 戏</button>
+  <br><br>
+  <button id="btn-load-save" class="btn-start" style="font-size:14px;padding:8px 30px;margin-top:4px;background:#1a0a00;border-color:#3a2a1a;color:#b09050;" onclick="loadSave()">📂 恢复上次存档</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -495,6 +497,25 @@ function confirmAIAssist() {
   closeAIAssist();
 }
 
+// ── Load save ──
+async function loadSave() {
+  const resp = await fetch('/api/load_save', {method:'POST'});
+  const data = await resp.json();
+  if (data.loaded) {
+    document.getElementById('setup-panel').style.display = 'none';
+    document.getElementById('input-bar').style.display = 'flex';
+    document.getElementById('user-input').disabled = true;
+    document.getElementById('user-input').placeholder = '存档已加载';
+    document.getElementById('input-prompt').innerHTML = '📂 存档已恢复 — 包含 ' + data.dialog.length + ' 条对话';
+    syncDialog(data.dialog || []);
+    updateActions(data.actions || []);
+    if (!polling) { polling = true; pollState(); }
+    showToast('存档加载成功');
+  } else {
+    showToast('没有找到存档');
+  }
+}
+
 // ── Start game ──
 async function startGame() {
   const resp = await fetch('/api/start', {
@@ -556,18 +577,23 @@ function updateSidebarFromState(data) {
     // 正在等待此角色输入
     input.disabled = false;
     input.placeholder = '输入 ' + persp + ' 的发言…';
-    prompt.innerHTML = '✋ <strong>' + persp + '</strong> 轮到你了：' + data.awaiting_manual.context;
+    prompt.innerHTML = '✋ <strong>' + persp + '</strong> 轮到你了：' + data.awaiting_manual.context
+      + ' <button class="ai-help-btn" onclick="callAIAssist(\''+persp+'\',\'speak\',\'\')">✨ AI帮写</button>';
     if (sendBtn) sendBtn.style.display = '';
     input.focus();
   } else if (manualHere) {
     input.disabled = false;
     input.placeholder = '输入 ' + persp + ' 的发言…';
-    prompt.innerHTML = '✋ 操控 <strong>' + persp + '</strong> <button class="take-btn active" onclick="releaseControl(\''+persp+'\')">释放</button> <button class="ai-help-btn" onclick="callAIAssist(\''+persp+'\',\'speak\',\'\')">✨ AI辅助</button>';
+    prompt.innerHTML = '✋ 操控 <strong>' + persp + '</strong>'
+      + ' <button class="take-btn active" onclick="releaseControl(\''+persp+'\')">释放</button>'
+      + ' <button class="ai-help-btn" onclick="callAIAssist(\''+persp+'\',\'speak\',\'\')">✨ AI帮写</button>';
     if (sendBtn) sendBtn.style.display = '';
   } else {
     input.disabled = false;
     input.placeholder = '输入 ' + persp + ' 的发言…';
-    prompt.innerHTML = '👁 观察 ' + persp + ' — 直接输入即可接管';
+    prompt.innerHTML = '👁 观察 ' + persp
+      + ' <button class="take-btn" onclick="takeControl(\''+persp+'\')">🎮 接管</button>'
+      + ' <button class="ai-help-btn" onclick="callAIAssist(\''+persp+'\',\'speak\',\'\')">✨ AI帮写</button>';
     if (sendBtn) sendBtn.style.display = '';
   }
   // Thinking panel

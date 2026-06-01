@@ -19,7 +19,7 @@
 
 ## 📖 关于《十日终焉》/ About the Novel
 
-> *十日终焉（Ten Days to Eternity）* 是中国网络作家 **烟灰** 创作的悬疑推理小说，连载于起点中文网。
+> *十日终焉（Ten Days to Eternity）* 是中国网络作家 **杀虫队队员** 创作的悬疑推理小说，连载于起点中文网。
 > 故事讲述一群被困在「终焉之地」的人们，被迫参加由十二生肖主持的死亡游戏。
 > 每个游戏都是对人性的极致考验——说谎、信任、背叛、牺牲。
 > 角色们在无尽的轮回中寻找真相、救赎与自由。
@@ -29,7 +29,7 @@
 > hosted by the Chinese Zodiac. Each game is an ultimate test of human nature — lying, trust, betrayal, sacrifice.
 > Characters seek truth, redemption, and freedom through endless cycles.*
 
-- **作者 / Author**: 烟灰 (Yan Hui)
+- **作者 / Author**: 杀虫队队员 (Insecticide Squad Member)
 - **平台 / Platform**: 起点中文网 (Qidian) · [查看原著]()
 - **标签 / Tags**: 悬疑 · 推理 · 智斗 · 轮回 · 群像
 
@@ -294,5 +294,5 @@ Open **http://localhost:8910**
 
 ## 📜 许可 / License
 
-本项目仅供学习和研究使用。《十日终焉》角色和世界观版权归作者 **烟灰** 所有。
+本项目仅供学习和研究使用。《十日终焉》角色和世界观版权归作者 **杀虫队队员** 所有。
 This project is for learning and research purposes only. "Ten Days to Eternity" characters and world are copyrighted by author **Yan Hui**.
