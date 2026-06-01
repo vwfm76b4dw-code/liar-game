@@ -672,8 +672,17 @@ async def api_manual_toggle(req: Request):
 @app.post("/api/manual_input")
 async def api_manual_input(req: Request):
     body = await req.json()
-    state.manual_input_data = body.get("content", "")
+    content = body.get("content", "")
+    state.manual_input_data = content
     state.manual_event.set()
+    # 立即将用户输入显示在对话中，提供视觉反馈
+    if state.awaiting_manual:
+        char_name = state.awaiting_manual.get("character", "")
+        action_type = state.awaiting_manual.get("type", "speak")
+        if action_type == "vote":
+            state.log(char_name, f"投票：{content}", "vote")
+        else:
+            state.log(char_name, content, "ai")
     return {"status": "received"}
 
 
@@ -857,14 +866,23 @@ async def _run_voting() -> dict:
     state.votes = []
 
     for agent in state.participants:
-        try:
-            target, reason = await _run_blocking(
-                agent.vote, 1, vote_options
-            )
-        except Exception:
-            others = [n for n in all_names if n != agent.name]
-            target = random.choice(others + ["人羊"]) if others else "人羊"
-            reason = "随机选择"
+        if agent.name in state.manual_players:
+            _wait_manual("vote", agent.name, f"投票给谁？可选：{' '.join(vote_options)}")
+            manual_vote = await _await_manual_input()
+            parts = manual_vote.split(" ", 1)
+            if parts[0] in vote_options:
+                target = parts[0]
+                reason = parts[1] if len(parts) > 1 else "玩家手动投票"
+            else:
+                target = random.choice(vote_options)
+                reason = "手动输入解析失败"
+        else:
+            try:
+                target, reason = await _run_blocking(agent.vote, 1, vote_options)
+            except Exception:
+                others = [n for n in all_names if n != agent.name]
+                target = random.choice(others + ["人羊"]) if others else "人羊"
+                reason = "随机选择"
 
         if target:
             vote = Vote(voter=agent.name, target=target, reason=reason)
