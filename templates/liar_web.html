@@ -61,6 +61,7 @@ body {
 }
 .header h1 .blood { color: #d04030; }
 .hdr-group { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+#auto-controls { display: inline-flex; align-items: center; gap: 6px; }
 .hdr-badge {
   font-family: 'TimeFont', monospace; background: #0a0806;
   border: 1px solid var(--border); padding: 1px 8px;
@@ -314,6 +315,53 @@ body {
   padding: 8px 14px; font-size: 12px; color: var(--accent2); display: none;
   font-family: 'TitleFont', serif;
 }
+
+/* ── Voting overlay ── */
+#vote-overlay {
+  display: none; position: fixed; inset: 0; z-index: 300;
+  background: rgba(5,3,1,0.88); backdrop-filter: blur(6px);
+  align-items: center; justify-content: center;
+}
+.vote-box {
+  background: linear-gradient(145deg,#0f0b06,#1a1008);
+  border: 1px solid #3a2818; border-radius: 16px;
+  padding: 24px; max-width: 520px; width: 90%; max-height: 80vh; overflow-y: auto;
+}
+.vote-title {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px; font-family: 'TitleFont',serif;
+  font-size: 18px; color: var(--accent);
+}
+.vote-prompt { font-size: 12px; color: var(--text3); font-family: 'BodyFont',serif; }
+.vote-grid {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 8px;
+}
+.vote-card {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 10px 6px; border-radius: 10px; cursor: pointer;
+  border: 1px solid var(--border); background: rgba(255,255,255,0.03);
+  transition: 0.12s;
+}
+.vote-card:hover { background: rgba(255,255,255,0.08); border-color: var(--accent2); transform: scale(1.04); }
+.vote-card .vc-av {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-family: 'GlyphFont',sans-serif;
+}
+.vote-card .vc-name { font-size: 12px; color: var(--text2); }
+.vote-card .vc-reason { font-size: 9px; color: var(--text3); }
+.vote-tip { margin-top: 14px; font-size: 10px; color: var(--text3); text-align: center; }
+.aa-link { cursor: pointer; color: var(--accent2); text-decoration: underline; }
+.aa-link:hover { color: var(--accent); }
+
+/* ── Debug panel ── */
+#debug-panel {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 999;
+  background: rgba(0,0,0,0.92); border-top: 1px solid #3a3a00;
+  padding: 6px 12px; font-family: monospace; font-size: 10px; color: #c0c060;
+  display: none; max-height: 120px; overflow-y: auto; white-space: pre-wrap;
+  pointer-events: none;
+}
 </style>
 </head>
 <body>
@@ -325,10 +373,12 @@ body {
     <span class="hdr-badge" id="cycle-badge">轮回:1 轮:0</span>
     <span class="hdr-badge" id="time-display">◷ --:--</span>
     <span id="persp-label">👑 人羊 · 观察者</span>
-    <span class="hdr-group">
-      <button class="hdr-btn" id="btn-auto" onclick="toggleAuto()">▶ 自动</button>
-      <button class="hdr-btn" id="btn-pause" onclick="togglePause()" style="display:none;">⏸</button>
-      <button class="hdr-btn danger" id="btn-stop" onclick="stopAuto()" style="display:none;">⏹</button>
+    <span class="hdr-group" id="control-panel">
+      <span id="auto-controls">
+        <button class="hdr-btn" id="btn-auto" onclick="toggleAuto()">▶ 自动</button>
+        <button class="hdr-btn" id="btn-pause" onclick="togglePause()" style="display:none;">⏸</button>
+        <button class="hdr-btn danger" id="btn-stop" onclick="stopAuto()" style="display:none;">⏹</button>
+      </span>
       <button class="hdr-btn" onclick="saveExperiment()" title="保存实验">💾</button>
       <button class="hdr-btn" onclick="exportDialog()" title="导出对话文本">📄</button>
     </span>
@@ -393,6 +443,18 @@ body {
   </div>
 </div><!-- AI assist overlay close -->
 
+<!-- Voting overlay -->
+<div id="vote-overlay">
+  <div class="vote-box">
+    <div class="vote-title">
+      <span>🗳️ 投票</span>
+      <span class="vote-prompt" id="vote-prompt">请选择你要投票的对象</span>
+    </div>
+    <div class="vote-grid" id="vote-grid"></div>
+    <div class="vote-tip">点击角色头像进行投票 · <span class="aa-link" onclick="callAIAssist(window._votePersp||'','vote','')">✨ AI帮选</span></div>
+  </div>
+</div>
+
 </div><!-- app close -->
 
 <!-- Setup overlay -->
@@ -410,6 +472,7 @@ body {
 </div>
 
 <div class="toast" id="toast"></div>
+<div id="debug-panel"></div>
 
 <script>
 // ── Character data ──
@@ -519,6 +582,60 @@ function releaseControl(name) {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({name: name}),
   });
+}
+
+// ── Voting overlay ──
+function showVoteOverlay(persp, context) {
+  // Parse vote options from context: "投票给谁？可选：齐夏 甜甜 ..."
+  const m = context.match(/可选[：:]\s*(.+)/);
+  if (!m) return;
+  const names = m[1].trim().split(/\s+/);
+  window._votePersp = persp;
+
+  const grid = document.getElementById('vote-grid');
+  grid.innerHTML = '';
+  document.getElementById('vote-overlay').style.display = 'flex';
+
+  names.forEach(name => {
+    const cd = CHAR_DATA.find(c => c.name === name);
+    const isHost = name === '人羊';
+    const card = document.createElement('div');
+    card.className = 'vote-card';
+    card.innerHTML = `<div class="vc-av" style="background:${isHost?'#2a1a10':cd?.color||'#1a1a1a'};border:1px solid ${isHost?'#706050':cd?.border||'#4a4a4a'};">${isHost?'🐑':cd?.glyph||'?'}</div>
+      <div class="vc-name">${name}</div>`;
+    card.onclick = () => castVote(persp, name);
+    grid.appendChild(card);
+  });
+}
+function castVote(persp, target) {
+  document.getElementById('vote-overlay').style.display = 'none';
+  fetch('/api/manual_input', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({content: target}),
+  });
+}
+function dismissVote() {
+  document.getElementById('vote-overlay').style.display = 'none';
+}
+
+// ── Debug mode ──
+const _debug = location.search.includes('debug=1');
+function debugLog(...args) {
+  if (!_debug) return;
+  const p = document.getElementById('debug-panel');
+  if (!p) return;
+  p.style.display = 'block';
+  const line = document.createElement('div');
+  line.textContent = '['+new Date().toLocaleTimeString()+'] ' + args.join(' ');
+  p.appendChild(line);
+  p.scrollTop = p.scrollHeight;
+}
+
+function showStats() {
+  if (!_debug) return;
+  fetch('/api/stats').then(r=>r.json()).then(s => {
+    debugLog('📊 LLM调用:', s.call_count+'次', '| 缓存命中:', s.cache_hit_rate+'%', '| 思考预算:', s.thinking_budget);
+  }).catch(() => {});
 }
 
 // ── AI Assist ──
@@ -660,6 +777,8 @@ async function pollState() {
         autoMode = data.auto_mode;
         updateAutoUI();
       }
+      debugLog('state:', JSON.stringify({phase:data.phase,awm:data.awaiting_manual,auto:data.auto_mode}));
+      showStats();
     } catch(e) {}
     await new Promise(r => setTimeout(r, 1200));
   }
@@ -679,13 +798,21 @@ function updateSidebarFromState(data) {
   const input = document.getElementById('user-input');
   const sendBtn = document.querySelector('#input-bar .send-btn');
   if (data.awaiting_manual && data.awaiting_manual.character === persp) {
-    // 正在等待此角色输入
-    input.disabled = false;
-    input.placeholder = '输入 ' + persp + ' 的发言…';
-    prompt.innerHTML = '✋ <strong>' + persp + '</strong> 轮到你了：' + data.awaiting_manual.context
-      + ' <button class="ai-help-btn" onclick="callAIAssist(\''+persp+'\',\'speak\',\'\')">✨ AI帮写</button>';
-    if (sendBtn) sendBtn.style.display = '';
-    input.focus();
+    if (data.awaiting_manual.type === 'vote') {
+      showVoteOverlay(persp, data.awaiting_manual.context);
+      input.disabled = true;
+      input.placeholder = '使用投票面板进行投票';
+      prompt.innerHTML = '🗳️ 投票阶段 — 请选择你要投票的对象';
+      if (sendBtn) sendBtn.style.display = 'none';
+    } else {
+      // 非投票的等待输入（故事/问答）
+      input.disabled = false;
+      input.placeholder = '输入 ' + persp + ' 的发言…';
+      prompt.innerHTML = '✋ <strong>' + persp + '</strong> 轮到你了：' + data.awaiting_manual.context
+        + ' <button class="ai-help-btn" onclick="callAIAssist(\''+persp+'\',\'speak\',\'\')">✨ AI帮写</button>';
+      if (sendBtn) sendBtn.style.display = '';
+      input.focus();
+    }
   } else if (manualHere) {
     input.disabled = false;
     input.placeholder = '输入 ' + persp + ' 的发言…';
@@ -864,6 +991,24 @@ document.addEventListener('keydown', e => {
     e.preventDefault(); sendMessage();
   }
 });
+// ── 页面加载检查：如果已有游戏进行中，自动隐藏设置面板 ──
+(async function() {
+  try {
+    const resp = await fetch('/api/state');
+    const data = await resp.json();
+    if (data.phase && data.phase !== 'idle') {
+      document.getElementById('setup-panel').classList.add('hidden');
+      await new Promise(r => setTimeout(r, 600));
+      document.getElementById('setup-panel').style.display = 'none';
+      document.getElementById('game-layout').style.display = 'flex';
+      document.getElementById('input-bar').style.display = 'flex';
+      document.getElementById('auto-controls').style.display = 'flex';
+      document.getElementById('control-panel').style.display = 'flex';
+      polling = true;
+      pollState();
+    }
+  } catch(e) { console.warn('init check failed', e); }
+})();
 </script>
 </body>
 </html>

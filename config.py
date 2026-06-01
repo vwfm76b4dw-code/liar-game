@@ -15,7 +15,7 @@ class LLMConfig:
     api_key: str = os.getenv('DEEPSEEK_API_KEY', '')
     base_url: str = os.getenv('DEEPSEEK_BASE_URL', 'https://api.deepseek.com')
     model: str = os.getenv('DEEPSEEK_MODEL', 'deepseek-v4-pro')
-    max_tokens: int = 32000
+    max_tokens: int = 4096
     temperature: float = 0.7
     timeout: int = 60
     @classmethod

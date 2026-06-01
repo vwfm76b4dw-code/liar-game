@@ -274,15 +274,18 @@ async def _run_freediscussion():
     """自由讨论 — 自然交锋"""
     state._discussion_active = True
     try:
-        await _do_freediscussion()
+        continue  # next round
     finally:
         state._discussion_active = False
 
 
 async def _do_freediscussion():
-    state.log("系统", f"═════ 第 {state.round_num} 轮自由讨论 ═════", "system")
-    participants = list(state.participants)
-    random.shuffle(participants)
+    while True:
+        if state.auto_paused or state.auto_stopped:
+            break
+        state.log("系统", f"═════ 第 {state.round_num} 轮自由讨论 ═════", "system")
+        participants = list(state.participants)
+        random.shuffle(participants)
     exchanges = min(5 + state.round_num * 2, 9)  # 讨论轮次越多越激烈
     for i in range(exchanges):
         if state.auto_paused or state.auto_stopped:
@@ -292,14 +295,7 @@ async def _do_freediscussion():
         if asker.name in state.manual_players:
             _wait_manual("question", asker.name, f"向谁提问？可选：{' '.join(others)}")
             manual_q = await _await_manual_input()
-            # 解析格式：目标名 问题
-            parts = manual_q.split(" ", 1)
-            if len(parts) >= 2 and parts[0] in others:
-                target_name = parts[0]
-                question = parts[1]
-            else:
-                target_name = random.choice(others)
-                question = manual_q
+            target_name, question = _parse_manual_question(manual_q, others)
         else:
             try:
                 target_name, question, _ = await _run_blocking(asker.ask_question, state.round_num, others)
@@ -336,11 +332,12 @@ async def _do_freediscussion():
         if state.auto_mode and not state.auto_paused and not state.auto_stopped:
             await asyncio.sleep(2)
             if not state.auto_paused and not state.auto_stopped:
-                await _do_freediscussion()
+                continue  # next round
     else:
         state.phase = "voting"
         if state.auto_mode and not state.auto_stopped:
             await _run_voting_internal()
+            break  # exit while loop
 
 
 async def _run_voting_internal():

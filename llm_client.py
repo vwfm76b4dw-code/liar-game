@@ -5,6 +5,8 @@
 - JSON 模式 (json_mode)
 - 自动重试 (exponential backoff)
 - 容错 JSON 解析
+- Prompt 缓存命中追踪
+- 思考预算可配置
 """
 
 from __future__ import annotations
@@ -27,6 +29,8 @@ class LLMClient:
         self.config = config or LLMConfig()
         self._client: Optional[OpenAI] = None
         self.call_count = 0
+        self.cache_hits = 0
+        self.cache_misses = 0
 
     @property
     def client(self) -> OpenAI:
@@ -38,6 +42,11 @@ class LLMClient:
                 base_url=self.config.base_url,
             )
         return self._client
+
+    @property
+    def cache_hit_rate(self) -> float:
+        total = self.cache_hits + self.cache_misses
+        return self.cache_hits / total if total > 0 else 0.0
 
     def chat(
         self,
@@ -61,12 +70,13 @@ class LLMClient:
             "max_tokens": max_tokens or self.config.max_tokens,
         }
 
-        # DeepSeek 最大思考强度（通过 extra_body 传递）
+        # DeepSeek 缓存优化 + 思考强度控制
         if "deepseek" in self.config.model:
+            thinking_budget = int(os.getenv("DEEPSEEK_THINKING_BUDGET", "2048"))
             kwargs["extra_body"] = {
                 "thinking": {
                     "type": "enabled",
-                    "budget_tokens": int(os.getenv("DEEPSEEK_THINKING_BUDGET", "8192")),
+                    "budget_tokens": thinking_budget,
                 }
             }
 
@@ -81,6 +91,8 @@ class LLMClient:
             try:
                 resp = self.client.chat.completions.create(**kwargs)
                 self.call_count += 1
+                # 追踪缓存命中
+                self._track_cache(resp)
                 return resp.choices[0].message.content or ""
             except Exception as e:
                 last_error = e
@@ -88,6 +100,18 @@ class LLMClient:
                     time.sleep(2 ** attempt)
 
         raise RuntimeError(f"DeepSeek API 调用失败（重试3次）: {last_error}")
+
+    def _track_cache(self, resp):
+        """追踪 prompt 缓存命中（DeepSeek 通过 response headers 返回）"""
+        try:
+            headers = resp.headers if hasattr(resp, 'headers') else {}
+            cache_hit = headers.get('x-ds-cache-hit', '') or headers.get('x-ds-prompt-cache-hit', '')
+            if cache_hit and cache_hit.lower() in ('1', 'true', 'hit'):
+                self.cache_hits += 1
+            else:
+                self.cache_misses += 1
+        except Exception:
+            self.cache_misses += 1
 
     def chat_json(
         self,

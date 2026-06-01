@@ -175,11 +175,13 @@ VOTE_PROMPT = """## 当前状态
 
 # ── 辅助 ──
 
-def format_history(qa_list: list[dict], perspective: str) -> str:
+def format_history(qa_list: list[dict], perspective: str, max_exchanges: int = 10) -> str:
     if not qa_list:
         return "（尚无对话）"
+    # 只保留最近 N 条记录，控制 prompt 长度
+    truncated = qa_list[-max_exchanges:]
     lines = []
-    for i, qa in enumerate(qa_list, 1):
+    for i, qa in enumerate(truncated, max(1, len(qa_list) - len(truncated) + 1)):
         is_self = qa.get("asker") == perspective or qa.get("respondent") == perspective
         marker = " ★（你）" if is_self else ""
         lines.append(
@@ -187,6 +189,8 @@ def format_history(qa_list: list[dict], perspective: str) -> str:
             f"**{qa.get('asker', '?')}**→**{qa.get('respondent', '?')}**：{qa.get('question', '?')}\n"
             f"**{qa.get('respondent', '?')}**答：{qa.get('answer', '?')}\n"
         )
+    if len(qa_list) > max_exchanges:
+        lines.insert(0, f"（共 {len(qa_list)} 条记录，仅展示最近 {max_exchanges} 条）\n")
     return "\n".join(lines)
 
 def format_suspicion(suspicion: dict[str, float]) -> str:

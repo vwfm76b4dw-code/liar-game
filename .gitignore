@@ -24,6 +24,12 @@ static/fonts/*.otf
 
 # 运行时数据
 data/memories/
+# 游戏存档
+data/last_save.json
+# 状态快照
+_state.json
+# UI 截图
+liar-game-ui-initial.png
 .claude/plugins/
 .claude/skills/taste-skill/
 .claude/skills/superpowers/
