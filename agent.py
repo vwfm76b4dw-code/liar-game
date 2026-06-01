@@ -123,7 +123,7 @@ class ParticipantAgent(BaseAgent):
         )
         resp = self.chat_json(user_msg)
         thinking = resp.get("thinking", "")
-        story = resp.get("story", "我……我不记得了。")
+        story = resp.get("story", "[待补充]")
         self.thoughts.append({"action": "story", "thinking": thinking})
         return story, thinking
 

@@ -541,26 +541,34 @@ async function pollState() {
 
 function updateSidebarFromState(data) {
   const manualSet = new Set(data.manual_players || []);
+  window._lastManualPlayers = data.manual_players || [];
   SEAT_ORDER.forEach(name => {
     const dot = document.getElementById('ind-'+name);
     if (dot) dot.className = 'dot ' + (manualSet.has(name) ? 'manual' : 'auto');
   });
-  // Update prompt & thinking if current perspective's state changed
   const persp = _currentPersp;
   if (persp === 'host') return;
   const manualHere = manualSet.has(persp);
   const prompt = document.getElementById('input-prompt');
   const input = document.getElementById('user-input');
-  if (manualHere) {
+  const sendBtn = document.querySelector('#input-bar .send-btn');
+  if (data.awaiting_manual && data.awaiting_manual.character === persp) {
+    // 正在等待此角色输入
+    input.disabled = false;
+    input.placeholder = '输入 ' + persp + ' 的发言…';
+    prompt.innerHTML = '✋ <strong>' + persp + '</strong> 轮到你了：' + data.awaiting_manual.context;
+    if (sendBtn) sendBtn.style.display = '';
+    input.focus();
+  } else if (manualHere) {
     input.disabled = false;
     input.placeholder = '输入 ' + persp + ' 的发言…';
     prompt.innerHTML = '✋ 操控 <strong>' + persp + '</strong> <button class="take-btn active" onclick="releaseControl(\''+persp+'\')">释放</button> <button class="ai-help-btn" onclick="callAIAssist(\''+persp+'\',\'speak\',\'\')">✨ AI辅助</button>';
-    document.querySelector('#input-bar .send-btn').style.display = '';
-  } else if (persp !== 'host') {
+    if (sendBtn) sendBtn.style.display = '';
+  } else {
     input.disabled = false;
     input.placeholder = '输入 ' + persp + ' 的发言…';
-    prompt.innerHTML = '👁 观察 ' + persp + ' <button class="take-btn" onclick="takeControl(\''+persp+'\')">🎮 接管</button>';
-    document.querySelector('#input-bar .send-btn').style.display = 'none';
+    prompt.innerHTML = '👁 观察 ' + persp + ' — 直接输入即可接管';
+    if (sendBtn) sendBtn.style.display = '';
   }
   // Thinking panel
   const tp = document.getElementById('thinking-panel');
@@ -679,6 +687,14 @@ function sendMessage() {
   const text = input.value.trim();
   if (!text || _currentPersp === 'host') return;
   input.value = '';
+  // 如果未接管，自动接管
+  const manualSet = new Set(window._lastManualPlayers || []);
+  if (!manualSet.has(_currentPersp)) {
+    fetch('/api/manual_toggle', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name: _currentPersp}),
+    });
+  }
   fetch('/api/manual_input', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({content: text}),
