@@ -259,35 +259,36 @@ Open **http://localhost:8910**
 
 ---
 
-## 📝 Changelog
+## 📝 Changelog / 更新日志
+
+> 仅记录当前版本更新。历史版本参见 git log。
+> Only current version updates are listed. See git log for history.
 
 ### v1.0.0 — 2026-06-01
-初始发布 / Initial Release
 
-#### 功能 / Features
-- DeepSeek V4-Pro / V4-Flash 双模型驱动 / Dual model driving
-- 齐夏专用 V4-Pro，其余 V4-Flash / Qixia uses V4-Pro, others V4-Flash
-- 微信风格聊天 UI / WeChat-style chat UI
-- 角色 SVG 像素头像 / SVG pixel-art character avatars
-- 视角切换系统 / Perspective switching system
-- 角色手动接管 / Manual character possession
-- AI 辅助发言建议 / AI-assisted speech suggestions
-- 回响觉醒系统（基于思考过程判定） / Echo awakening system (thought-based)
-- 自动流程 + 暂停/停止 / Auto-flow + pause/stop
-- 对话导出 (TXT) / Chat export (TXT)
-- 智能自动滚动 / Smart auto-scroll
-- API 失败兜底 [待补充] / Graceful API fallback [Pending]
-- 投票手动接管 / Manual voting control
-- 回车自动发送 / Enter to send
+#### ✨ 新功能 / Features
+- DeepSeek V4-Pro / V4-Flash 双模型驱动（齐夏 V4-Pro，其余 V4-Flash）
+- 微信风格聊天 UI，SVG 像素风角色头像
+- 视角切换系统（人羊观察者 / 角色第一人称）
+- 角色手动接管 + 释放（输入即自动接管）
+- AI 辅助发言建议一键生成
+- 回响觉醒系统（基于思考过程 `agent.thoughts` 判定）
+- 自动流程 + 暂停 / 继续 / 停止
+- 投票阶段支持手动接管
+- 对话导出为 .txt 文件
+- 智能自动滚动（仅在底部时跟随）
+- API 失败使用 `[待补充]` 占位符，避免伪人话
 
-#### 角色 / Characters
-- 9 位角色完整原著档案 / Complete novel-accurate profiles for all 9 characters
-- 独立提示词 + 心理状态 / Independent prompts + psychological states
-- 跨轮回记忆系统 / Cross-cycle memory system
+#### 🎭 角色 / Characters
+- 9 位面试房间角色完整原著档案
+- 每位角色独立系统提示词、心理状态、死亡故事
+- 跨轮回记忆系统
 
-### v0.9.0 — 2026-05-30
-- 初始框架搭建 / Initial framework
-- CLI 版本 / CLI version
+#### 🔧 技术 / Tech
+- FastAPI + 异步自动流程
+- ThreadPoolExecutor 隔离阻塞 LLM 调用
+- 前端轮询状态同步（1.2s 间隔）
+- 乐观 UI 更新（视角切换即时响应）
 
 ---
 
