@@ -596,7 +596,8 @@ async function startGame() {
   document.getElementById('auto-controls').style.display = 'flex';
   document.getElementById('control-panel').style.display = 'flex';
   // 清空旧对话
-  document.getElementById('chat-area').innerHTML = '';
+  const ca = document.getElementById('chat-area');
+  if (ca) ca.innerHTML = '';
   _seen.clear();
   const resp = await fetch('/api/start', {
     method:'POST', headers:{'Content-Type':'application/json'},
@@ -625,6 +626,16 @@ async function startGame() {
     });
   }
   syncDialog(data.dialog || []);
+  console.log('[DEBUG] startGame loaded', data.dialog?.length, 'messages');
+  // fallback: 直接用 innerHTML 渲染
+  const _fb = document.getElementById('chat-area');
+  if (_fb && data.dialog && data.dialog.length && _fb.children.length === 0) {
+    console.log('[DEBUG] syncDialog failed, using innerHTML fallback');
+    _fb.innerHTML = data.dialog.map(m =>
+      '<div class="msg-row ' + (m.type||'ai') + '"><div class="msg-bubble">' +
+      (m.speaker ? '<b>' + m.speaker + '</b> ' : '') + (m.content||'') + '</div></div>'
+    ).join('');
+  }
   updateActions(data.actions || []);
   if (!polling) { polling = true; pollState(); }
 }
@@ -769,6 +780,16 @@ async function doAction(action, payload) {
   });
   const data = await resp.json();
   syncDialog(data.dialog || []);
+  console.log('[DEBUG] startGame loaded', data.dialog?.length, 'messages');
+  // fallback: 直接用 innerHTML 渲染
+  const _fb = document.getElementById('chat-area');
+  if (_fb && data.dialog && data.dialog.length && _fb.children.length === 0) {
+    console.log('[DEBUG] syncDialog failed, using innerHTML fallback');
+    _fb.innerHTML = data.dialog.map(m =>
+      '<div class="msg-row ' + (m.type||'ai') + '"><div class="msg-bubble">' +
+      (m.speaker ? '<b>' + m.speaker + '</b> ' : '') + (m.content||'') + '</div></div>'
+    ).join('');
+  }
   updateActions(data.actions || []);
   if (data.winner) showToast(data.winner + ' 获胜');
 }
