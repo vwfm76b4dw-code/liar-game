@@ -296,6 +296,7 @@ body {
       <button class="hdr-btn" id="btn-auto" onclick="toggleAuto()">▶ 自动</button>
       <button class="hdr-btn" id="btn-pause" onclick="togglePause()" style="display:none;">⏸</button>
       <button class="hdr-btn danger" id="btn-stop" onclick="stopAuto()" style="display:none;">⏹</button>
+      <button class="hdr-btn" onclick="exportDialog()" title="导出对话记录">💾</button>
     </span>
   </div>
 
@@ -682,6 +683,14 @@ function sendMessage() {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({content: text}),
   });
+}
+
+function exportDialog() {
+  const a = document.createElement('a');
+  a.href = '/api/export';
+  a.download = 'liar_game_dialog.txt';
+  a.click();
+  showToast('对话已导出');
 }
 
 function showToast(m) {

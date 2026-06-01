@@ -76,7 +76,7 @@ class EchoSystem:
         self._awakened: set[str] = set()
         self._cycle_checked: set[str] = set()
 
-    def check_awakening(self, name: str, echo_name: Optional[str], events: list[dict], cycle_id: int) -> AwakeningResult:
+    def check_awakening(self, name: str, echo_name: Optional[str], events: list[dict], cycle_id: int, thinking_text: str = "") -> AwakeningResult:
         if not echo_name or name not in ECHO_DEFS:
             return AwakeningResult(character_name=name, awakened=False)
         if name in self._awakened:
@@ -87,8 +87,12 @@ class EchoSystem:
         self._cycle_checked.add(name)
 
         defi = ECHO_DEFS[name]
-        my_speeches = [evt.get('content', '') for evt in events if evt.get('speaker') == name]
-        combined = '\n'.join(my_speeches)
+        # 优先使用思考过程判定觉醒，思考过程比公开发言更真实地反映内心
+        if thinking_text and thinking_text.strip():
+            combined = thinking_text
+        else:
+            my_speeches = [evt.get('content', '') for evt in events if evt.get('speaker') == name]
+            combined = '\n'.join(my_speeches)
         if not combined.strip():
             return AwakeningResult(character_name=name, awakened=False, echo_name=echo_name, trigger_event='未发言')
 

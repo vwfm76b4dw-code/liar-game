@@ -328,12 +328,14 @@ async def _run_voting_internal():
         state.log("系统", "全员投票给了「人羊」——他们发现了真相！", "system")
     else:
         state.log("系统", "投票不统一——人羊的谎言未被完全识破。", "system")
-    # 回响判定
+    # 回响判定（基于思考过程，比公开发言更真实）
     state.awakening_results = []
     events_with_speakers = [{"content": e.get("content", ""), "speaker": e.get("speaker", "")} for e in state.dialog_log]
     for agent in state.participants:
         echo_name = agent.player.personality.echo.name if agent.player.personality.echo else None
-        result = state.echo_sys.check_awakening(agent.name, echo_name, events_with_speakers, state.current_cycle)
+        # 提取角色本轮思考过程作为觉醒判定核心依据
+        thinking_text = "\n".join(t.get("thinking", "") for t in agent.thoughts if t.get("thinking"))
+        result = state.echo_sys.check_awakening(agent.name, echo_name, events_with_speakers, state.current_cycle, thinking_text=thinking_text)
         state.awakening_results.append(result)
         if result.awakened:
             agent.player.awakened = True
@@ -885,12 +887,14 @@ async def _run_voting() -> dict:
     else:
         state.log("系统", "投票不统一——人羊的谎言未被完全识破。", "system")
 
-    # 回响判定
+    # 回响判定（基于思考过程，比公开发言更真实）
     state.awakening_results = []
     events_with_speakers = [{"content": e.get("content", ""), "speaker": e.get("speaker", "")} for e in state.dialog_log]
     for agent in state.participants:
         echo_name = agent.player.personality.echo.name if agent.player.personality.echo else None
-        result = state.echo_sys.check_awakening(agent.name, echo_name, events_with_speakers, state.current_cycle)
+        # 提取角色本轮思考过程作为觉醒判定核心依据
+        thinking_text = "\n".join(t.get("thinking", "") for t in agent.thoughts if t.get("thinking"))
+        result = state.echo_sys.check_awakening(agent.name, echo_name, events_with_speakers, state.current_cycle, thinking_text=thinking_text)
         state.awakening_results.append(result)
         if result.awakened:
             agent.player.awakened = True
@@ -1032,6 +1036,27 @@ def get_state():
         "character_thoughts": _get_thoughts(state.current_perspective) if state.current_perspective != "host" else [],
         "participant_names": [a.name for a in state.participants],
     }
+
+@app.get("/api/export")
+def export_dialog():
+    """导出完整对话记录为文本文件"""
+    lines = []
+    lines.append("=" * 60)
+    lines.append("  说谎者 · 终焉之地 — 完整对话记录")
+    lines.append(f"  轮回: {state.current_cycle}  轮次: {state.round_num}")
+    lines.append(f"  导出时间: {__import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    lines.append("=" * 60)
+    lines.append("")
+    for entry in state.dialog_log:
+        t = entry.get("timestamp", "")
+        s = entry.get("speaker", "")
+        c = entry.get("content", "")
+        lines.append(f"[{t}] {s}")
+        lines.append(f"  {c}")
+        lines.append("")
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse("\n".join(lines), media_type="text/plain; charset=utf-8",
+        headers={"Content-Disposition": f"attachment; filename=liar_game_dialog_{__import__('datetime').datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"})
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8910, log_level="info")
