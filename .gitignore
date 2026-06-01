@@ -24,3 +24,7 @@ static/fonts/*.otf
 
 # 运行时数据
 data/memories/
+.claude/plugins/
+.claude/skills/taste-skill/
+.claude/skills/superpowers/
+.claude/skills/andrej-karpathy-skills/
