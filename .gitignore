@@ -1,0 +1,26 @@
+# 环境配置
+.env
+.env.example
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# 日志
+*.log
+server*.log
+
+# 临时文件
+check_resp.py
+test_write.txt
+opening_resp.json
+state.json
+state2.json
+
+# 静态文件（字体需要单独提交，后续用户自己添加）
+static/fonts/*.ttf
+static/fonts/*.otf
+
+# 运行时数据
+data/memories/
