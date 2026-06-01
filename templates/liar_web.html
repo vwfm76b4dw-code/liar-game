@@ -578,6 +578,8 @@ function updateSidebarFromState(data) {
 function syncDialog(dialog) {
   if (!dialog || !dialog.length) return;
   const area = document.getElementById('chat-area');
+  // 记录用户是否在底部（距底部 < 50px 视为在底部）
+  const wasAtBottom = area.scrollHeight - area.scrollTop - area.clientHeight < 50;
   dialog.forEach(msg => {
     if (_seen.has(msg.id)) return;
     _seen.add(msg.id);
@@ -607,7 +609,10 @@ function syncDialog(dialog) {
       '<div class="msg-bubble">'+(msg.content||'')+'</div></div>';
     area.appendChild(row);
   });
-  requestAnimationFrame(() => { area.scrollTop = area.scrollHeight; });
+  // 只在用户原本就在底部时才自动滚动
+  if (wasAtBottom) {
+    requestAnimationFrame(() => { area.scrollTop = area.scrollHeight; });
+  }
 }
 
 // ── Actions ──
