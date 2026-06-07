@@ -359,6 +359,9 @@ def _parse_manual_question(text, others):
 
 async def _run_voting_internal():
     """内部投票逻辑"""
+    was_stopped = state.auto_stopped
+    if not state.auto_mode:
+        state.auto_stopped = False  # 手动模式下不跳过等待
     state.phase = "voting"
     state.log("系统", "═════ 投票阶段 ═════", "system")
     all_names = [a.name for a in state.participants]
@@ -412,6 +415,7 @@ async def _run_voting_internal():
     if not any(r.awakened for r in state.awakening_results):
         state.log("系统", "无人觉醒回响。", "system")
     state.phase = "result_pending"
+    state.auto_stopped = was_stopped
     if state.auto_mode and not state.auto_stopped:
         await asyncio.sleep(2)
         _announce_result_internal()
@@ -965,6 +969,9 @@ async def _run_discussion() -> dict:
 # ── 投票 ──
 
 async def _run_voting() -> dict:
+    was_stopped = state.auto_stopped
+    if not state.auto_mode:
+        state.auto_stopped = False
     state.phase = "voting"
     state.log("系统", "═════ 投票阶段 ═════", "system")
 
@@ -1029,6 +1036,7 @@ async def _run_voting() -> dict:
         state.log("系统", "无人觉醒回响。", "system")
 
     state.phase = "result_pending"
+    state.auto_stopped = was_stopped
 
     return {
         "dialog": state.dialog_log[-40:],
@@ -1171,7 +1179,7 @@ def get_stats():
         "cache_hits": llm.cache_hits,
         "cache_misses": llm.cache_misses,
         "cache_hit_rate": round(llm.cache_hit_rate * 100, 1),
-        "thinking_budget": int(os.getenv("DEEPSEEK_THINKING_BUDGET", "2048")),
+        "thinking_budget": int(os.environ.get("DEEPSEEK_THINKING_BUDGET", "2048")),
         "model": llm.config.model,
         "max_tokens": llm.config.max_tokens,
     }
