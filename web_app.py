@@ -274,18 +274,15 @@ async def _run_freediscussion():
     """自由讨论 — 自然交锋"""
     state._discussion_active = True
     try:
-        continue  # next round
+        await _do_freediscussion()
     finally:
         state._discussion_active = False
 
 
 async def _do_freediscussion():
-    while True:
-        if state.auto_paused or state.auto_stopped:
-            break
-        state.log("系统", f"═════ 第 {state.round_num} 轮自由讨论 ═════", "system")
-        participants = list(state.participants)
-        random.shuffle(participants)
+    state.log("系统", f"═════ 第 {state.round_num} 轮自由讨论 ═════", "system")
+    participants = list(state.participants)
+    random.shuffle(participants)
     exchanges = min(5 + state.round_num * 2, 9)  # 讨论轮次越多越激烈
     for i in range(exchanges):
         if state.auto_paused or state.auto_stopped:
@@ -332,13 +329,33 @@ async def _do_freediscussion():
         if state.auto_mode and not state.auto_paused and not state.auto_stopped:
             await asyncio.sleep(2)
             if not state.auto_paused and not state.auto_stopped:
-                continue  # next round
+                await _do_freediscussion()
     else:
         state.phase = "voting"
         if state.auto_mode and not state.auto_stopped:
             await _run_voting_internal()
-            break  # exit while loop
 
+
+def _parse_manual_vote(text, vote_options):
+    """解析手动投票：先精确匹配第一个词，再查找角色名"""
+    parts = text.strip().split(" ", 1)
+    if parts[0] in vote_options:
+        return parts[0], (parts[1] if len(parts) > 1 else "玩家手动投票")
+    for opt in vote_options:
+        if opt in text:
+            return opt, "玩家手动投票"
+    return None, "手动输入解析失败"
+
+def _parse_manual_question(text, others):
+    """解析手动提问：先精确匹配第一个词，再查找角色名"""
+    parts = text.strip().split(" ", 1)
+    if len(parts) >= 2 and parts[0] in others:
+        return parts[0], parts[1]
+    for opt in others:
+        if opt in text:
+            remaining = text.replace(opt, "", 1).strip()
+            return opt, remaining if remaining else text
+    return None, text
 
 async def _run_voting_internal():
     """内部投票逻辑"""
@@ -351,11 +368,8 @@ async def _run_voting_internal():
         if agent.name in state.manual_players:
             _wait_manual("vote", agent.name, f"投票给谁？可选：{' '.join(vote_options)}")
             manual_vote = await _await_manual_input()
-            parts = manual_vote.split(" ", 1)
-            if parts[0] in vote_options:
-                target = parts[0]
-                reason = parts[1] if len(parts) > 1 else "玩家手动投票"
-            else:
+            target, reason = _parse_manual_vote(manual_vote, vote_options)
+            if not target:
                 target = random.choice(vote_options)
                 reason = "手动输入解析失败"
         else:
@@ -962,11 +976,8 @@ async def _run_voting() -> dict:
         if agent.name in state.manual_players:
             _wait_manual("vote", agent.name, f"投票给谁？可选：{' '.join(vote_options)}")
             manual_vote = await _await_manual_input()
-            parts = manual_vote.split(" ", 1)
-            if parts[0] in vote_options:
-                target = parts[0]
-                reason = parts[1] if len(parts) > 1 else "玩家手动投票"
-            else:
+            target, reason = _parse_manual_vote(manual_vote, vote_options)
+            if not target:
                 target = random.choice(vote_options)
                 reason = "手动输入解析失败"
         else:
@@ -1149,6 +1160,20 @@ def get_state():
         "character_auto": state.character_auto,
         "character_thoughts": _get_thoughts(state.current_perspective) if state.current_perspective != "host" else [],
         "participant_names": [a.name for a in state.participants],
+    }
+
+@app.get("/api/stats")
+def get_stats():
+    """API 调用统计和缓存命中率"""
+    llm = state.llm
+    return {
+        "call_count": llm.call_count,
+        "cache_hits": llm.cache_hits,
+        "cache_misses": llm.cache_misses,
+        "cache_hit_rate": round(llm.cache_hit_rate * 100, 1),
+        "thinking_budget": int(os.getenv("DEEPSEEK_THINKING_BUDGET", "2048")),
+        "model": llm.config.model,
+        "max_tokens": llm.config.max_tokens,
     }
 
 @app.get("/api/export")
