@@ -186,7 +186,7 @@ cp .env.example .env
 DEEPSEEK_API_KEY="sk-your-key-here"
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 DEEPSEEK_MODEL=deepseek-v4-pro
-DEEPSEEK_THINKING_BUDGET=16384
+DEEPSEEK_THINKING_BUDGET=2048
 ```
 
 ### 3. 启动 Web 服务器 / Start Server
@@ -332,6 +332,27 @@ Open **http://localhost:8910**
 - ThreadPoolExecutor 隔离阻塞 LLM 调用
 - 前端轮询状态同步（1.2s 间隔）
 - 乐观 UI 更新（视角切换即时响应）
+
+### v1.0.1 — 2026-06-07
+
+#### ✨ 新功能 / Features
+- 投票弹窗 UI（3列角色卡片 + AI帮选）
+- Debug 调试面板（`?debug=1` 启用）
+- `/api/stats` 统计端点（缓存命中率、思考预算）
+- 页面加载状态恢复（刷新后自动回到游戏）
+
+#### ⚡ 优化 / Optimizations
+- LLM 缓存命中追踪（`x-ds-cache-hit` header）
+- `max_tokens` 8192→4096（大幅降低 token 消耗）
+- `formak_history` 增加 `max_exchanges=10` 截断
+- `_parse_manual_vote/question` 函数提取（消除重复代码）
+- `.gitignore` 补充运行时文件排除
+
+#### 🔧 修复 / Fixes
+- `LLMConfig.validate()` 重复方法移除
+- 讨论阶段递归调用修复
+- 投票手动输入解析容错（中文自然语言匹配）
+- 头部控制按钮容器修复（`display:flex`）
 
 ---
 
